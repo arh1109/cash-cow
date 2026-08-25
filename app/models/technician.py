@@ -3,8 +3,8 @@ from typing import ClassVar
 class Technician:
     registry: ClassVar[list["Technician"]] = []
 
-    def __init__(self, operator_id: int, name: str, branch_id: int):
-        self.id = operator_id
+    def __init__(self, technician_id: int, name: str, branch_id: int):
+        self.id = technician_id
         self.name = name
         self.branch_id = branch_id
         Technician.registry.append(self)
