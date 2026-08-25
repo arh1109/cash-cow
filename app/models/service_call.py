@@ -27,7 +27,7 @@ class ServiceCall:
     # The __repr__ method provides a string representation of the Facility instance equivealent
     # to the Java toString method, but mostly used for debuggina dn logging
     def __repr__(self) -> str:
-        return (f"Facility(id={self.id}), name={self.name!r},"
+        return (f"Branch(id={self.id}), name={self.name!r},"
                  f"region={self.location_region!r}")
 
     ''' A class method that finds the facility instance by its ID
