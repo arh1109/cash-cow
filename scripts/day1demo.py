@@ -54,7 +54,7 @@ def find_colocation_discrepancies(
 
 
 
-# create some dummy seed data for the demo, including facilities, robots, missions, and dianostic logs
+# create some dummy seed data for the demo, including branches, robots, missions, and dianostic logs
 def seed_demo_data() -> None:
     Branch(1, "Houston Fabrication Plant", "US-South", capacity=40, supervisor_id=101)
     Branch(2, "Rotterdam Logistics Hub", "EU-East", capacity=25, supervisor_id=102)

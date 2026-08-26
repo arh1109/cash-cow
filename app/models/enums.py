@@ -21,3 +21,8 @@ class ServiceCallPriority(str, Enum):
     LOW = "Low"
     MEDIUM = "Medium"
     CRITICAL = "Critical"
+
+class UserRole(str, Enum):
+    FLEET_ADMIN = 'Field Admin'
+    FIELD_TECHNICIAN = 'Field Technician'
+    AUDITOR = 'Auditor'
