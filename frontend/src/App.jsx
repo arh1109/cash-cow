@@ -1,11 +1,27 @@
-import { Container, Typography, Box} from '@mui/material'
+import { Container, Typography, Box, Snackbar, Alert} from '@mui/material'
+import {useState} from 'react'
 import AppHeader from './components/layout/AppHeader.jsx'
+import LowCashAlert from './components/analytics/LowCashAlert.jsx';
+// import ATMList from './components/robots/ATMList.jsx'
+// import DiscrepancyList from './components/service_calls/DiscrepancyList.jsx'
+// import { mockATMs } from './mockData/robots.js'
+// import {mockDiscrepancies} from './mockData/discrepancies.js'
+
+import ReliabilityMetrics from './components/analytics/ReliabilityMetrics.jsx'
+import MaintenanceFlags from './components/analytics/MaintenanceFlags.jsx'
+import ReportingLines from './components/analytics/ReportingLines.jsx'
+
 import LoginForm from './components/auth/LoginForm.jsx';
-import RobotDataGrid from './components/robots/ATMDataGrid.jsx';
+import ATMDataGrid from './components/atms/ATMDataGrid.jsx';
+import DiscrepancyDataGrid from './components/service_calls/DiscrepancyDataGrid.jsx';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 
+//a main dashboard component that renders the application header and robot data grid to authenticated users
 function Dashboard(){
+  //stores the current user object and logout function from the global AuthContext
   const {user, logout} = useAuth()
+  const [notification, setNotification] = useState(null)
+
   return (
     <>
       <AppHeader username={user?.sub} role={user?.role} onLogout={logout} />
@@ -14,11 +30,48 @@ function Dashboard(){
           Fleet Overview
         </Typography>
         <Box sx={{ mb: 4}}>
-          < ATMDataGrid />
+          <ATMDataGrid onSuccess={setNotification}/>
+        </Box>
+        <Typography variant="h5" component="h2" gutterBottom>
+          Co-Location Discrepancies
+        </Typography>
+        <Box sx={{ mb: 4}}>
+          <DiscrepancyDataGrid />
         </Box>
       </Container>
+
+      <Typography variant="h5" component="h2" gutterBottom>
+      Reliability Metrics
+      </Typography>
+      <Box sx={{ mb: 4 }}>
+      <ReliabilityMetrics />
+      </Box>
+
+      <Typography variant="h5" component="h2" gutterBottom>
+      Maintenance Flags
+      </Typography>
+      <Box sx={{ mb: 4 }}>
+      <MaintenanceFlags />
+      </Box>
+
+      <Typography variant="h5" component="h2" gutterBottom>
+      Reporting Lines
+      </Typography>
+      <Box sx={{ mb: 4 }}>
+      <ReportingLines />
+      </Box>
+
+      <Snackbar
+        open={Boolean(notification)}
+        autoHideDuration={4000}
+        onClose={() => setNotification(null)}>
+          <Alert severity="success" onClose={() => setNotification(null)}>
+            {notification}
+          </Alert>
+        </Snackbar>
+
     </>
-  )
+  );
 }
 
 //conditional layout switcher component that renders either the Dashboard or the login form
@@ -29,12 +82,31 @@ function AppContent() {
 }
 
 //acts as a root application component that wraps the entire app in the AuthProvider context
-function App(){
+export default function App(){
   return (
       <AuthProvider>
         <AppContent />
       </AuthProvider>
+
+
+
+    // <>
+    //   <AppHeader />
+    //   <Container maxWidth='lg' sx={{ mt: 4}}>
+    //     <Typography variant="h5" component="h2" gutterBottom>
+    //       Fleet Overview
+    //     </Typography>
+    //     <Box sx={{ mb: 4}}>
+    //       <ATMList robots={mockATMs} />
+    //     </Box>
+    //     <Typography variant="h5" component="h2" gutterBottom>
+    //       Co-Location Discrepancies
+    //     </Typography>
+    //     <Box sx={{ mb: 4}}>
+    //       <DiscrepancyList discrepancies={mockDiscrepancies} />
+    //     </Box>
+
+    //   </Container>
+    // </>
   )
 }
-
-export default App;

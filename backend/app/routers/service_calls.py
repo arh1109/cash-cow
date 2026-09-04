@@ -13,14 +13,14 @@ from app.dependencies import get_current_user, get_db, require_role
 from app.models import ServiceCall, ServiceCallPriority, Technician, ATM, ServiceCallStatus, User, UserRole
 from app.schemas.service_call import DiscrepancyRead, ServiceCallRead, ServiceCallStatusUpdate, ReliabilityMetric
 
-router = APIRouter(prefix="/missions", tags=["missions"])
+router = APIRouter(prefix="/service_calls", tags=["service_calls"])
 
 
 @router.get("/discrepancies", response_model=list[DiscrepancyRead])
 async def list_colocation_discrepancies(
     priority: ServiceCallPriority | None = Query(
         default=None,
-        description="Only return discrepancies for missions of this priority.",
+        description="Only return discrepancies for service_calls of this priority.",
     ),
     db: AsyncSession = Depends(get_db),
     ##Day 5 code here
@@ -30,7 +30,7 @@ async def list_colocation_discrepancies(
     Business Question #2: Co-Location Discrepancy - a fourth time.
     Day 1: Python. Day 2: raw SQL. Day 3: async ORM script. Today:
     the same three-table JOIN, reachable at
-    GET /missions/discrepancies, with an optional priority filter.
+    GET /service_calls/discrepancies, with an optional priority filter.
 
     Selects only the four columns the response actually needs,
     rather than full ServiceCall/ATM/Technician objects, to reduce 
@@ -38,7 +38,7 @@ async def list_colocation_discrepancies(
     """
     statement = (
         select(
-            ServiceCall.id.label("mission_id"),
+            ServiceCall.id.label("service_call_id"),
             ServiceCall.title,
             ATM.branch_id.label("atm_branch_id"),
             Technician.branch_id.label("technician_branch_id"),
@@ -59,29 +59,29 @@ async def list_colocation_discrepancies(
 
 
 ##Day 5 - Phase B Answer Key
-@router.patch("/{mission_id}/status", response_model=ServiceCallRead)
-async def update_mission_status(
-    mission_id: int,
+@router.patch("/{service_call_id}/status", response_model=ServiceCallRead)
+async def update_service_call_status(
+    service_call_id: int,
     payload: ServiceCallStatusUpdate,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_role(UserRole.OPERATIONS_ADMIN, UserRole.FIELD_OPERATOR)),
+    _: User = Depends(require_role(UserRole.OPERATIONS_ADMIN, UserRole.FIELD_TECHNICIAN)),
 ) -> ServiceCall:
-    mission = await db.get(ServiceCall, mission_id)
-    if mission is None:
+    service_call = await db.get(ServiceCall, service_call_id)
+    if service_call is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"ServiceCall '{mission_id}' not found",
+            detail=f"ServiceCall '{service_call_id}' not found",
         )
     if payload.status == ServiceCallStatus.COMPLETED:
-        mission.mark_completed()
+        service_call.mark_completed()
     elif payload.status == ServiceCallStatus.FAILED:
-        mission.mark_failed()
+        service_call.mark_failed()
     else:
-        mission.status = payload.status
+        service_call.status = payload.status
 
     await db.commit()
-    await db.refresh(mission)
-    return mission
+    await db.refresh(service_call)
+    return service_call
 
 
 @router.get("/reliability", response_model=list[ReliabilityMetric])
@@ -93,12 +93,12 @@ async def reliability_metrics(
     Business Question #3: Reliability Metrics.
     Any authenticated role can view this - it's an analytics endpoint,
     matching the problem statement's "Auditor can view analytics
-    dashboards" requirement, same as /missions/discrepancies.
+    dashboards" requirement, same as /service_calls/discrepancies.
     """
     statement = (
         select(
             ATM.model,
-            func.count(ServiceCall.id).label("total_missions"),
+            func.count(ServiceCall.id).label("total_service_calls"),
             func.sum(case((ServiceCall.status == ServiceCallStatus.COMPLETED, 1), else_=0)).label("completed_count"),
             func.sum(case((ServiceCall.status == ServiceCallStatus.FAILED, 1), else_=0)).label("failed_count"),
         )

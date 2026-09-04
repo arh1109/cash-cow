@@ -320,3 +320,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+backend/package/
+backend/lambda_deployment.zip
+lambda-env.json
+redeploy_lambda.ps1

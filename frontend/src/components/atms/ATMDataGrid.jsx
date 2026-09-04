@@ -8,15 +8,24 @@ const columns = [
     {field: 'id', headerName: 'ID', width: 70},
     {field: 'serial_number', headerName: "Serial Number", width: 150},
     {field: 'model', headerName: "Model", width: 160},
-    {field: 'cash_level', headerName: "Cash %", width: 120, type: 'number'},
+    {
+        field: 'cash_level',
+        headerName: "Cash %",
+        width: 120,
+        type: 'number',
+        cellClassName: (params) =>
+            params.value < 20 
+                ? 'low-cash-cell'
+                : '',
+            },
     {field: 'status', headerName: "Status", width: 130},
     {field: 'branch_id', headerName: "Branch ID", width: 110, type: 'number'},
 ];
 
 //local state variables for tracking table rows, loading status, and network errors
 //to track the lifecylce of the async API request so the UI can render appropriately
-function RobotDataGrid() {
-    const [robots, setRobots] = useState([]);
+function ATMDataGrid() {
+    const [atms, setATMs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -26,10 +35,10 @@ function RobotDataGrid() {
         let isMounted = true;
 
         //pulls our robot fleet data from our backend
-        async function fetchRobots() {
+        async function fetchATMs() {
             try {
                 const response = await apiClient.get('/atms');
-                if(isMounted) setRobots(response.data);
+                if(isMounted) setATMs(response.data);
             } catch {
                 if (isMounted) setError('Could not load fleet data');
             } finally {
@@ -37,7 +46,7 @@ function RobotDataGrid() {
             }
         }
 
-        fetchRobots();
+        fetchATMs();
         return () => {
             isMounted = false;
         };
@@ -51,11 +60,24 @@ function RobotDataGrid() {
 
     //returns our data grid if all succeeds
     return (
-        <Box sx={{height: 400, width: '100%'}}>
-            <DataGrid rows={robots} columns={columns} getRowId={(row) => row.id} />
-        </Box>
-    );
+    <Box
+        sx={{
+            height: 400,
+            width: '100%',
+            '& .low-cash-cell': {
+                color: 'red',
+                fontWeight: 'bold',
+            },
+        }}
+    >
+        <DataGrid
+            rows={atms}
+            columns={columns}
+            getRowId={(row) => row.id}
+        />
+    </Box>
+);
 
 }
 
-export default RobotDataGrid;
+export default ATMDataGrid;
