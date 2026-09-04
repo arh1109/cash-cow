@@ -49,7 +49,7 @@ async def login(
 async def register_user(
     payload: UserCreate,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_role(UserRole.FLEET_ADMIN)),
+    _: User = Depends(require_role(UserRole.OPERATIONS_ADMIN)),
 ) -> User:
     #checking if the username already exists in the db
     existing = await db.execute(select(User).where(User.username == payload.username))

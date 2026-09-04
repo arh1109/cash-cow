@@ -19,8 +19,8 @@ from app.models.enums import ATMStatus
 class ATMBase(BaseModel):
     serial_number: str = Field(min_length=1, max_length=50)
     model: str = Field(min_length=1, max_length=100)
-    battery_level: Decimal = Field(ge=0, le=100)
-    facility_id: int
+    cash_level: Decimal = Field(ge=0, le=100)
+    branch_id: int
     status: ATMStatus = ATMStatus.OPERATIONAL
 
 # Two additional classes that build upon this starter class

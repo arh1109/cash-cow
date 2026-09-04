@@ -63,7 +63,7 @@ async def get_atm(atm_id: int, db: AsyncSession = Depends(get_db), _: User = Dep
 @router.post("", response_model=ATMRead, status_code=status.HTTP_201_CREATED)
 async def create_robot(payload: ATMCreate, db: AsyncSession = Depends(get_db),
         # Day 5 Addition
-        _: User = Depends(require_role(UserRole.FLEET_ADMIN))) -> ATM:
+        _: User = Depends(require_role(UserRole.OPERATIONS_ADMIN))) -> ATM:
     atm = ATM(**payload.model_dump())
     db.add(atm)
     await db.commit()
