@@ -1,7 +1,6 @@
 import { Container, Typography, Box, Snackbar, Alert} from '@mui/material'
 import {useState} from 'react'
 import AppHeader from './components/layout/AppHeader.jsx'
-import LowCashAlert from './components/analytics/LowCashAlert.jsx';
 // import ATMList from './components/robots/ATMList.jsx'
 // import DiscrepancyList from './components/service_calls/DiscrepancyList.jsx'
 // import { mockATMs } from './mockData/robots.js'
@@ -13,8 +12,10 @@ import ReportingLines from './components/analytics/ReportingLines.jsx'
 
 import LoginForm from './components/auth/LoginForm.jsx';
 import ATMDataGrid from './components/atms/ATMDataGrid.jsx';
+import ServiceCallDataGrid from './components/service_calls/ServiceCallDataGrid.jsx';
 import DiscrepancyDataGrid from './components/service_calls/DiscrepancyDataGrid.jsx';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import UserDataGrid from './components/users/UserDataGrid.jsx';
 
 //a main dashboard component that renders the application header and robot data grid to authenticated users
 function Dashboard(){
@@ -32,6 +33,13 @@ function Dashboard(){
         <Box sx={{ mb: 4}}>
           <ATMDataGrid onSuccess={setNotification}/>
         </Box>
+        <Typography variant="h5" component="h2" gutterBottom>
+    Service Calls
+</Typography>
+
+    <Box sx={{ mb: 4 }}>
+        <ServiceCallDataGrid onSuccess={setNotification} />
+    </Box>
         <Typography variant="h5" component="h2" gutterBottom>
           Co-Location Discrepancies
         </Typography>
@@ -70,6 +78,21 @@ function Dashboard(){
           </Alert>
         </Snackbar>
 
+      {user?.role === 'Operations Admin' && (
+    <>
+        <Typography
+            variant="h5"
+            component="h2"
+            gutterBottom
+        >
+            User Accounts
+        </Typography>
+
+        <Box sx={{ mb: 4 }}>
+            <UserDataGrid onSuccess={setNotification} />
+        </Box>
+    </>
+)}
     </>
   );
 }

@@ -35,3 +35,18 @@ class ReliabilityMetric(BaseModel):
     total_service_calls: int
     completed_count: int
     failed_count: int
+
+class ServiceCallCreate(BaseModel):
+    title: str
+    priority: ServiceCallPriority
+    status: ServiceCallStatus = ServiceCallStatus.PENDING
+    atm_id: int
+    technician_id: int
+
+
+class ServiceCallUpdate(BaseModel):
+    title: str
+    priority: ServiceCallPriority
+    status: ServiceCallStatus
+    atm_id: int
+    technician_id: int

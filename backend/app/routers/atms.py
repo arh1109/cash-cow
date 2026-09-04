@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_db, get_current_user, require_role
 from app.models import ATM, ATMStatus, User, UserRole
-from app.schemas.atm import ATMCreate, ATMRead
+from app.schemas.atm import ATMCreate, ATMRead, ATMUpdate
 
 #our FastAPI router for the /robots endpoints. The prefix argument means that
 #  all routes defined in this router will be prefixed with /robots, and the 
@@ -69,3 +69,48 @@ async def create_robot(payload: ATMCreate, db: AsyncSession = Depends(get_db),
     await db.commit()
     await db.refresh(atm)
     return atm
+
+@router.put("/{atm_id}", response_model=ATMRead)
+async def update_atm(
+    atm_id: int,
+    payload: ATMUpdate,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_role(UserRole.OPERATIONS_ADMIN)),
+) -> ATM:
+
+    atm = await db.get(ATM, atm_id)
+
+    if atm is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"ATM {atm_id} not found",
+        )
+
+    atm.serial_number = payload.serial_number
+    atm.model = payload.model
+    atm.cash_level = payload.cash_level
+    atm.status = payload.status
+    atm.branch_id = payload.branch_id
+
+    await db.commit()
+    await db.refresh(atm)
+
+    return atm
+
+@router.delete("/{atm_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_atm(
+    atm_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_role(UserRole.OPERATIONS_ADMIN)),
+) -> None:
+
+    atm = await db.get(ATM, atm_id)
+
+    if atm is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"ATM {atm_id} not found",
+        )
+
+    await db.delete(atm)
+    await db.commit()

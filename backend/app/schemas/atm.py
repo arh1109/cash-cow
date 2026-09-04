@@ -33,3 +33,10 @@ class ATMRead(ATMBase):
 
     # Allows us to construct a RobotRead obj from the database.
     model_config = ConfigDict(from_attributes=True)
+
+class ATMUpdate(BaseModel):
+    serial_number: str
+    model: str
+    cash_level: Decimal
+    branch_id: int
+    status: ATMStatus

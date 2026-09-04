@@ -20,6 +20,10 @@ class UserRead(UserBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
 
+class UserUpdate(UserBase):
+    # If omitted, keep the existing password.
+    password: str | None = Field(default=None, min_length=8)
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"

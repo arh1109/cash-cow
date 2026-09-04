@@ -17,62 +17,47 @@ import {
 import apiClient from '../../api/client';
 import { useAuth } from '../../context/AuthContext.jsx';
 
+
 const columns = [
     { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'serial_number', headerName: 'Serial Number', width: 150 },
-    { field: 'model', headerName: 'Model', width: 160 },
-    {
-        field: 'cash_level',
-        headerName: 'Cash %',
-        width: 120,
-        type: 'number',
-
-        renderCell: (params) => {
-            const isLowCash = Number(params.value) < 20;
-
-            return (
-                <span
-                    style={{
-                        color: isLowCash ? 'red' : 'inherit',
-                        fontWeight: isLowCash ? 'bold' : 'normal',
-                    }}
-                >
-                    {params.value}
-                </span>
-            );
-        },
-    },
+    { field: 'title', headerName: 'Title', width: 230 },
+    { field: 'priority', headerName: 'Priority', width: 120 },
     { field: 'status', headerName: 'Status', width: 130 },
-    { field: 'branch_id', headerName: 'Branch ID', width: 110, type: 'number' },
+    { field: 'atm_id', headerName: 'ATM ID', width: 100, type: 'number' },
+    {
+        field: 'technician_id',
+        headerName: 'Technician ID',
+        width: 130,
+        type: 'number',
+    },
 ];
 
-function ATMDataGrid({ onSuccess }) {
+
+function ServiceCallDataGrid({ onSuccess }) {
     const { user } = useAuth();
 
-    const [atms, setATMs] = useState([]);
+    const [serviceCalls, setServiceCalls] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const [selectedATM, setSelectedATM] = useState(null);
+    const [selectedServiceCall, setSelectedServiceCall] = useState(null);
     const [dialogMode, setDialogMode] = useState(null);
 
     const [searchText, setSearchText] = useState('');
-const [searchField, setSearchField] = useState('serial_number');
+const [searchField, setSearchField] = useState('title');
 const [isFiltered, setIsFiltered] = useState(false);
 
     const [formData, setFormData] = useState({
-        serial_number: '',
-        model: '',
-        cash_level: '',
-        status: 'Operational',
-        branch_id: '',
+        title: '',
+        priority: 'Medium',
+        status: 'Pending',
+        atm_id: '',
+        technician_id: '',
     });
 
-    const isAdmin = user?.role === 'Operations Admin';
-
-    const filteredATMs = isFiltered
-    ? atms.filter((atm) => {
-        const value = atm[searchField];
+    const filteredServiceCalls = isFiltered
+    ? serviceCalls.filter((serviceCall) => {
+        const value = serviceCall[searchField];
 
         if (value === null || value === undefined) {
             return false;
@@ -82,138 +67,155 @@ const [isFiltered, setIsFiltered] = useState(false);
             .toLowerCase()
             .includes(searchText.toLowerCase());
     })
-    : atms;
+    : serviceCalls;
 
-    async function fetchATMs() {
+    const isAdmin = user?.role === 'Operations Admin';
+
+
+    async function fetchServiceCalls() {
         try {
             setLoading(true);
 
-            const response = await apiClient.get('/atms');
+            const response = await apiClient.get('/service_calls');
 
-            setATMs(response.data);
+            setServiceCalls(response.data);
             setError(null);
-        } catch {
-            setError('Could not load fleet data');
+        } catch (err) {
+            console.error(err);
+            setError('Could not load service calls');
         } finally {
             setLoading(false);
         }
     }
 
+
     useEffect(() => {
-        fetchATMs();
+        fetchServiceCalls();
     }, []);
 
-    function handleSearch() {
-    if (!searchText.trim()) return;
-
-    setIsFiltered(true);
-    setSelectedATM(null);
-}
-
-function handleClearFilter() {
-    setSearchText('');
-    setIsFiltered(false);
-    setSelectedATM(null);
-}
 
     function openAddDialog() {
         setFormData({
-            serial_number: '',
-            model: '',
-            cash_level: '',
-            status: 'Operational',
-            branch_id: '',
+            title: '',
+            priority: 'Medium',
+            status: 'Pending',
+            atm_id: '',
+            technician_id: '',
         });
 
         setDialogMode('add');
     }
 
+
     function openEditDialog() {
-        if (!selectedATM) return;
+        if (!selectedServiceCall) return;
 
         setFormData({
-            serial_number: selectedATM.serial_number,
-            model: selectedATM.model,
-            cash_level: selectedATM.cash_level,
-            status: selectedATM.status,
-            branch_id: selectedATM.branch_id,
+            title: selectedServiceCall.title,
+            priority: selectedServiceCall.priority,
+            status: selectedServiceCall.status,
+            atm_id: selectedServiceCall.atm_id,
+            technician_id: selectedServiceCall.technician_id,
         });
 
         setDialogMode('edit');
     }
 
+
     function closeDialog() {
         setDialogMode(null);
     }
 
+    function handleSearch() {
+    if (!searchText.trim()) return;
+
+    setIsFiltered(true);
+    setSelectedServiceCall(null);
+}
+
+function handleClearFilter() {
+    setSearchText('');
+    setIsFiltered(false);
+    setSelectedServiceCall(null);
+}
+
+
     async function handleSave() {
         const payload = {
-            serial_number: formData.serial_number,
-            model: formData.model,
-            cash_level: Number(formData.cash_level),
+            title: formData.title,
+            priority: formData.priority,
             status: formData.status,
-            branch_id: Number(formData.branch_id),
+            atm_id: Number(formData.atm_id),
+            technician_id: Number(formData.technician_id),
         };
 
         try {
             if (dialogMode === 'add') {
-                await apiClient.post('/atms', payload);
+                await apiClient.post('/service_calls', payload);
 
-                onSuccess?.('ATM created successfully');
+                onSuccess?.('Service call created successfully');
             }
 
             if (dialogMode === 'edit') {
-                /*
-                 * IMPORTANT:
-                 * Change this to .put(...) if your backend uses PUT.
-                 */
                 await apiClient.put(
-                    `/atms/${selectedATM.id}`,
+                    `/service_calls/${selectedServiceCall.id}`,
                     payload
                 );
 
-                onSuccess?.('ATM updated successfully');
+                onSuccess?.('Service call updated successfully');
             }
 
             closeDialog();
-            await fetchATMs();
+            setSelectedServiceCall(null);
+
+            await fetchServiceCalls();
         } catch (err) {
             console.error(err);
             console.error('Backend response:', err.response?.data);
 
             setError(
                 err.response?.data?.detail ||
-                'Could not save ATM'
+                'Could not save service call'
             );
         }
     }
 
+
     async function handleDelete() {
-        if (!selectedATM) return;
+        if (!selectedServiceCall) return;
 
         const confirmed = window.confirm(
-            `Delete ATM ${selectedATM.serial_number}?`
+            `Delete service call "${selectedServiceCall.title}"?`
         );
 
         if (!confirmed) return;
 
         try {
-            await apiClient.delete(`/atms/${selectedATM.id}`);
+            await apiClient.delete(
+                `/service_calls/${selectedServiceCall.id}`
+            );
 
-            setSelectedATM(null);
+            setSelectedServiceCall(null);
 
-            onSuccess?.('ATM deleted successfully');
+            onSuccess?.('Service call deleted successfully');
 
-            await fetchATMs();
+            await fetchServiceCalls();
         } catch (err) {
             console.error(err);
-            setError('Could not delete ATM');
+            console.error('Backend response:', err.response?.data);
+
+            setError(
+                err.response?.data?.detail ||
+                'Could not delete service call'
+            );
         }
     }
+
 
     if (loading) {
         return <CircularProgress />;
     }
+
 
     return (
         <>
@@ -257,11 +259,11 @@ function handleClearFilter() {
         sx={{ minWidth: 170 }}
     >
         <MenuItem value="id">ID</MenuItem>
-        <MenuItem value="serial_number">Serial Number</MenuItem>
-        <MenuItem value="model">Model</MenuItem>
-        <MenuItem value="cash_level">Cash Level</MenuItem>
+        <MenuItem value="title">Title</MenuItem>
+        <MenuItem value="priority">Priority</MenuItem>
         <MenuItem value="status">Status</MenuItem>
-        <MenuItem value="branch_id">Branch ID</MenuItem>
+        <MenuItem value="atm_id">ATM ID</MenuItem>
+        <MenuItem value="technician_id">Technician ID</MenuItem>
     </TextField>
 
     <Button
@@ -286,24 +288,24 @@ function handleClearFilter() {
                 variant="contained"
                 onClick={openAddDialog}
             >
-                Add ATM
+                Add Service Call
             </Button>
 
             <Button
                 variant="outlined"
-                disabled={!selectedATM}
+                disabled={!selectedServiceCall}
                 onClick={openEditDialog}
             >
-                Edit ATM
+                Edit Service Call
             </Button>
 
             <Button
                 variant="outlined"
                 color="error"
-                disabled={!selectedATM}
+                disabled={!selectedServiceCall}
                 onClick={handleDelete}
             >
-                Delete ATM
+                Delete Service Call
             </Button>
         </>
     )}
@@ -311,12 +313,11 @@ function handleClearFilter() {
 
             <Box sx={{ height: 400, width: '100%' }}>
                 <DataGrid
-                    rows={filteredATMs}
+                    rows={filteredServiceCalls}
                     columns={columns}
                     getRowId={(row) => row.id}
-
                     onRowClick={(params) => {
-                        setSelectedATM(params.row);
+                        setSelectedServiceCall(params.row);
                     }}
                 />
             </Box>
@@ -329,48 +330,46 @@ function handleClearFilter() {
             >
                 <DialogTitle>
                     {dialogMode === 'add'
-                        ? 'Add ATM'
-                        : 'Edit ATM'}
+                        ? 'Add Service Call'
+                        : 'Edit Service Call'}
                 </DialogTitle>
 
                 <DialogContent>
-                    <Stack
-                        spacing={2}
-                        sx={{ mt: 1 }}
-                    >
+                    <Stack spacing={2} sx={{ mt: 1 }}>
                         <TextField
-                            label="Serial Number"
-                            value={formData.serial_number}
+                            label="Title"
+                            value={formData.title}
                             onChange={(e) =>
                                 setFormData({
                                     ...formData,
-                                    serial_number: e.target.value,
+                                    title: e.target.value,
                                 })
                             }
                         />
 
                         <TextField
-                            label="Model"
-                            value={formData.model}
+                            select
+                            label="Priority"
+                            value={formData.priority}
                             onChange={(e) =>
                                 setFormData({
                                     ...formData,
-                                    model: e.target.value,
+                                    priority: e.target.value,
                                 })
                             }
-                        />
+                        >
+                            <MenuItem value="Low">
+                                Low
+                            </MenuItem>
 
-                        <TextField
-                            label="Cash Level"
-                            type="number"
-                            value={formData.cash_level}
-                            onChange={(e) =>
-                                setFormData({
-                                    ...formData,
-                                    cash_level: e.target.value,
-                                })
-                            }
-                        />
+                            <MenuItem value="Medium">
+                                Medium
+                            </MenuItem>
+
+                            <MenuItem value="Critical">
+                                Critical
+                            </MenuItem>
+                        </TextField>
 
                         <TextField
                             select
@@ -383,31 +382,43 @@ function handleClearFilter() {
                                 })
                             }
                         >
-                            <MenuItem value="Operational">
-                                Operational
+                            <MenuItem value="Pending">
+                                Pending
                             </MenuItem>
 
-                            <MenuItem value="Low-Cash">
-                                Low-Cash
+                            <MenuItem value="In-Progress">
+                                In-Progress
                             </MenuItem>
 
-                            <MenuItem value="Maintenance">
-                                Maintenance
+                            <MenuItem value="Completed">
+                                Completed
                             </MenuItem>
 
-                            <MenuItem value="Offline">
-                                Offline
+                            <MenuItem value="Failed">
+                                Failed
                             </MenuItem>
                         </TextField>
 
                         <TextField
-                            label="Branch ID"
+                            label="ATM ID"
                             type="number"
-                            value={formData.branch_id}
+                            value={formData.atm_id}
                             onChange={(e) =>
                                 setFormData({
                                     ...formData,
-                                    branch_id: e.target.value,
+                                    atm_id: e.target.value,
+                                })
+                            }
+                        />
+
+                        <TextField
+                            label="Technician ID"
+                            type="number"
+                            value={formData.technician_id}
+                            onChange={(e) =>
+                                setFormData({
+                                    ...formData,
+                                    technician_id: e.target.value,
                                 })
                             }
                         />
@@ -431,4 +442,5 @@ function handleClearFilter() {
     );
 }
 
-export default ATMDataGrid;
+
+export default ServiceCallDataGrid;

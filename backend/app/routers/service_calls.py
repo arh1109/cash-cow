@@ -11,7 +11,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_current_user, get_db, require_role
 from app.models import ServiceCall, ServiceCallPriority, Technician, ATM, ServiceCallStatus, User, UserRole
-from app.schemas.service_call import DiscrepancyRead, ServiceCallRead, ServiceCallStatusUpdate, ReliabilityMetric
+from app.schemas.service_call import (
+    DiscrepancyRead,
+    ServiceCallCreate,
+    ServiceCallRead,
+    ServiceCallStatusUpdate,
+    ServiceCallUpdate,
+    ReliabilityMetric,
+)
 
 router = APIRouter(prefix="/service_calls", tags=["service_calls"])
 
@@ -108,3 +115,91 @@ async def reliability_metrics(
     )
     result = await db.execute(statement)
     return [dict(row) for row in result.mappings().all()]
+
+@router.get("", response_model=list[ServiceCallRead])
+async def list_service_calls(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> list[ServiceCall]:
+    statement = select(ServiceCall).order_by(ServiceCall.id)
+
+    result = await db.execute(statement)
+
+    return list(result.scalars().all())
+
+@router.post(
+    "",
+    response_model=ServiceCallRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_service_call(
+    payload: ServiceCallCreate,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(
+        require_role(UserRole.OPERATIONS_ADMIN)
+    ),
+) -> ServiceCall:
+
+    service_call = ServiceCall(**payload.model_dump())
+
+    db.add(service_call)
+
+    await db.commit()
+    await db.refresh(service_call)
+
+    return service_call
+
+@router.put(
+    "/{service_call_id}",
+    response_model=ServiceCallRead,
+)
+async def update_service_call(
+    service_call_id: int,
+    payload: ServiceCallUpdate,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(
+        require_role(UserRole.OPERATIONS_ADMIN)
+    ),
+) -> ServiceCall:
+
+    service_call = await db.get(ServiceCall, service_call_id)
+
+    if service_call is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Service call {service_call_id} not found",
+        )
+
+    service_call.title = payload.title
+    service_call.priority = payload.priority
+    service_call.status = payload.status
+    service_call.atm_id = payload.atm_id
+    service_call.technician_id = payload.technician_id
+
+    await db.commit()
+    await db.refresh(service_call)
+
+    return service_call
+
+@router.delete(
+    "/{service_call_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_service_call(
+    service_call_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(
+        require_role(UserRole.OPERATIONS_ADMIN)
+    ),
+) -> None:
+
+    service_call = await db.get(ServiceCall, service_call_id)
+
+    if service_call is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Service call {service_call_id} not found",
+        )
+
+    await db.delete(service_call)
+    await db.commit()

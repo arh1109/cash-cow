@@ -6,6 +6,7 @@ read real env variables froma .env file
 """
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+diagnostics_bucket_name: str = "cashcow-diagnostics-ah1109"
 
 class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://postgres:password@127.0.0.1:5432/cashcow_dev_2478"
@@ -14,6 +15,7 @@ class Settings(BaseSettings):
     # value for our JWT
     secret_key: str
     frontend_origin: str = "http://localhost:5173"
+    diagnostics_bucket_name: str = "cashcow-diagnostics-ah1109"
 
     # tells pydantic settings to actually read from backend/.env and fill these fields from it
     model_config = SettingsConfigDict(env_file=".env")
